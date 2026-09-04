@@ -143,7 +143,7 @@ constexpr double j0(double x);
 constexpr double j1(double x);
 
 constexpr double j0(double x) {
-#if CEVALM_HAS_STD_RUNTIME
+#if CEVALM_HAS_STD_RUNTIME && defined(__cpp_lib_math_special_functions)
     if !consteval {
         return std::cyl_bessel_j(0.0, x);
     }
@@ -185,7 +185,7 @@ constexpr double j0(double x) {
 }
 
 constexpr double j1(double x) {
-#if CEVALM_HAS_STD_RUNTIME
+#if CEVALM_HAS_STD_RUNTIME && defined(__cpp_lib_math_special_functions)
     if !consteval {
         return std::cyl_bessel_j(1.0, x);
     }
@@ -227,7 +227,7 @@ constexpr double j1(double x) {
 }
 
 constexpr double y0(double x) {
-#if CEVALM_HAS_STD_RUNTIME
+#if CEVALM_HAS_STD_RUNTIME && defined(__cpp_lib_math_special_functions)
     if !consteval {
         return std::cyl_neumann(0.0, x);
     }
@@ -274,7 +274,7 @@ constexpr double y0(double x) {
 }
 
 constexpr double y1(double x) {
-#if CEVALM_HAS_STD_RUNTIME
+#if CEVALM_HAS_STD_RUNTIME && defined(__cpp_lib_math_special_functions)
     if !consteval {
         return std::cyl_neumann(1.0, x);
     }
@@ -321,7 +321,7 @@ constexpr double y1(double x) {
 }
 
 constexpr double jn(int n, double x) {
-#if CEVALM_HAS_STD_RUNTIME
+#if CEVALM_HAS_STD_RUNTIME && defined(__cpp_lib_math_special_functions)
     if !consteval {
         return std::cyl_bessel_j(n, x);
     }
@@ -425,7 +425,7 @@ constexpr double jn(int n, double x) {
 }
 
 constexpr double yn(int n, double x) {
-#if CEVALM_HAS_STD_RUNTIME
+#if CEVALM_HAS_STD_RUNTIME && defined(__cpp_lib_math_special_functions)
     if !consteval {
         return std::cyl_neumann(n, x);
     }
