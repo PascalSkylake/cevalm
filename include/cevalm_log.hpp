@@ -8,6 +8,8 @@
  */
 #pragma once
 
+#include "cevalm_config.hpp"
+
 #include "cevalm_binary64.hpp"
 #include "cevalm_classify.hpp"
 #include "cevalm_exact.hpp"
@@ -15,7 +17,13 @@
 
 namespace cevalm {
 
-consteval double log(double x) {
+constexpr double log(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::log(x);
+    }
+#endif
+
     constexpr double ln2_high = 6.93147180369123816490e-01;
     constexpr double ln2_low = 1.90821492927058770002e-10;
     constexpr double lg1 = 6.666666666666735130e-01;
@@ -87,7 +95,13 @@ consteval double log(double x) {
     return dk * ln2_high - ((s * (f - remainder) - dk * ln2_low) - f);
 }
 
-consteval double log1p(double x) {
+constexpr double log1p(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::log1p(x);
+    }
+#endif
+
     constexpr double ln2_high = 6.93147180369123816490e-01;
     constexpr double ln2_low = 1.90821492927058770002e-10;
     constexpr double lp1 = 6.666666666666735130e-01;
@@ -186,7 +200,13 @@ consteval double log1p(double x) {
             f);
 }
 
-consteval double log2(double x) {
+constexpr double log2(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::log2(x);
+    }
+#endif
+
     constexpr double ln2 = 0.69314718055994530942;
     constexpr double lg1 = 6.666666666666735130e-01;
     constexpr double lg2 = 3.999999999940941908e-01;
@@ -242,7 +262,13 @@ consteval double log2(double x) {
     return dk - (s * (f - remainder) - f) / ln2;
 }
 
-consteval double log10(double x) {
+constexpr double log10(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::log10(x);
+    }
+#endif
+
     constexpr double inverse_ln10 = 4.34294481903251816668e-01;
     constexpr double log10_2_high = 3.01029995663611771306e-01;
     constexpr double log10_2_low = 3.69423907715893078616e-13;

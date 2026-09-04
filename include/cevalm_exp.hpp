@@ -8,13 +8,21 @@
  */
 #pragma once
 
+#include "cevalm_config.hpp"
+
 #include "cevalm_binary64.hpp"
 #include "cevalm_exact.hpp"
 #include "cevalm_scale.hpp"
 
 namespace cevalm {
 
-consteval double exp(double x) {
+constexpr double exp(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::exp(x);
+    }
+#endif
+
     constexpr double one = 1.0;
     constexpr double half[2] = {0.5, -0.5};
     constexpr double overflow_threshold = 7.09782712893383973096e+02;
@@ -69,7 +77,13 @@ consteval double exp(double x) {
     return binary64_scale(reduced, k);
 }
 
-consteval double expm1(double x) {
+constexpr double expm1(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::expm1(x);
+    }
+#endif
+
     constexpr double one = 1.0;
     constexpr double overflow_threshold = 7.09782712893383973096e+02;
     constexpr double ln2_high = 6.93147180369123816490e-01;

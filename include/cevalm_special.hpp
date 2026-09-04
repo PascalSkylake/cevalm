@@ -10,6 +10,8 @@
  */
 #pragma once
 
+#include "cevalm_config.hpp"
+
 #include "cevalm_binary64.hpp"
 #include "cevalm_classify.hpp"
 #include "cevalm_exact.hpp"
@@ -53,7 +55,7 @@ inline constexpr double erf_sb[7] = {3.03380607434824582924e+01, 3.2579251299657
                                      2.55305040643316442583e+03, 4.74528541206955367215e+02,
                                      -2.24409524465858183362e+01};
 
-consteval double erf_small_ratio(double square) {
+constexpr double erf_small_ratio(double square) {
     const double square2 = square * square, square4 = square2 * square2;
     const double numerator = (erf_pp[0] + square * erf_pp[1]) +
                              square2 * (erf_pp[2] + square * erf_pp[3]) + square4 * erf_pp[4];
@@ -62,7 +64,7 @@ consteval double erf_small_ratio(double square) {
                                square4 * (erf_qq[3] + square * erf_qq[4]);
     return numerator / denominator;
 }
-consteval double erf_middle_ratio(double offset) {
+constexpr double erf_middle_ratio(double offset) {
     const double square = offset * offset, fourth = square * square, sixth = fourth * square;
     const double numerator = (erf_pa[0] + offset * erf_pa[1]) +
                              square * (erf_pa[2] + offset * erf_pa[3]) +
@@ -72,7 +74,7 @@ consteval double erf_middle_ratio(double offset) {
                                fourth * (erf_qa[3] + offset * erf_qa[4]) + sixth * erf_qa[5];
     return numerator / denominator;
 }
-consteval double erf_tail_ratio(double reciprocal_square, bool first) {
+constexpr double erf_tail_ratio(double reciprocal_square, bool first) {
     const double square = reciprocal_square * reciprocal_square, fourth = square * square,
                  sixth = fourth * square;
     if (first) {
@@ -99,7 +101,13 @@ consteval double erf_tail_ratio(double reciprocal_square, bool first) {
     return numerator / denominator;
 }
 
-consteval double erf(double x) {
+constexpr double erf(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::erf(x);
+    }
+#endif
+
     const uint32 high = binary64_high_word(cevalm::fabs(x));
     const bool negative = signbit(x);
     if (isnan(x))
@@ -129,7 +137,13 @@ consteval double erf(double x) {
     return negative ? tail / absolute - 1.0 : 1.0 - tail / absolute;
 }
 
-consteval double erfc(double x) {
+constexpr double erfc(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::erfc(x);
+    }
+#endif
+
     const uint32 high = binary64_high_word(cevalm::fabs(x));
     const bool negative = signbit(x);
     if (isnan(x))
@@ -193,7 +207,7 @@ inline constexpr double lgamma_w[7] = {4.18938533204672725052e-01,  8.3333333333
                                        -5.95187557450339963135e-04, 8.36339918996282139126e-04,
                                        -1.63092934096575273989e-03};
 
-consteval double lgamma_sin_pi(double x) {
+constexpr double lgamma_sin_pi(double x) {
     constexpr double pi = 3.14159265358979311600e+00;
     const uint32 high = binary64_high_word(cevalm::fabs(x));
     if (high < 0x3fd00000U)
@@ -240,7 +254,7 @@ consteval double lgamma_sin_pi(double x) {
     return -result;
 }
 
-consteval double lgamma_r_value(double x, int* sign_gamma) {
+constexpr double lgamma_r_value(double x, int* sign_gamma) {
     constexpr double pi = 3.14159265358979311600e+00, tc = 1.46163214496836224576,
                      tf = -1.21486290535849611461e-01, tt = -3.63867699703950536541e-18;
     const uint64 original_bits = binary64_bits(x), magnitude = original_bits & ~binary64_sign_mask;
@@ -386,10 +400,23 @@ consteval double lgamma_r_value(double x, int* sign_gamma) {
     return negative ? adjustment - result : result;
 }
 
-consteval double lgamma_r(double x, int* sign_gamma) {
+constexpr double lgamma_r(double x, int* sign_gamma) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        *sign_gamma = std::signbit(x) ? -1 : 1;
+        return std::lgamma(x);
+    }
+#endif
+
     return lgamma_r_value(x, sign_gamma);
 }
-consteval double lgamma(double x) {
+constexpr double lgamma(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::lgamma(x);
+    }
+#endif
+
     int sign_gamma = 1;
     return lgamma_r_value(x, &sign_gamma);
 }
@@ -398,7 +425,7 @@ inline constexpr double gamma_coefficients[6] = {0x1.5555555555555p-4,  -0xb.60b
                                                  0x3.4034034034034p-12, -0x2.7027027027028p-12,
                                                  0x3.72a3c5631fe46p-12, -0x7.daac36664f1f4p-12};
 
-consteval void gamma_multiply_split(double* high, double* low, double x, double y) {
+constexpr void gamma_multiply_split(double* high, double* low, double x, double y) {
     *high = x * y;
     constexpr double splitter = 134217729.0;
     const double x_product = x * splitter, y_product = y * splitter;
@@ -407,7 +434,7 @@ consteval void gamma_multiply_split(double* high, double* low, double x, double 
     const double x_low = x - x_high, y_low = y - y_high;
     *low = ((x_high * y_high - *high) + x_high * y_low + x_low * y_high) + x_low * y_low;
 }
-consteval double gamma_product(double x, double x_error, int count, double* error) {
+constexpr double gamma_product(double x, double x_error, int count, double* error) {
     double result = x;
     *error = x_error / x;
     for (int i = 1; i < count; ++i) {
@@ -420,7 +447,7 @@ consteval double gamma_product(double x, double x_error, int count, double* erro
     }
     return result;
 }
-consteval double gamma_positive(double x, int* exponent_adjustment) {
+constexpr double gamma_positive(double x, int* exponent_adjustment) {
     int ignored_sign = 1;
     if (x < 0.5) {
         *exponent_adjustment = 0;
@@ -468,7 +495,14 @@ consteval double gamma_positive(double x, int* exponent_adjustment) {
     return result;
 }
 
-consteval double tgamma_r(double x, int* sign_gamma) {
+constexpr double tgamma_r(double x, int* sign_gamma) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        *sign_gamma = std::signbit(x) ? -1 : 1;
+        return std::tgamma(x);
+    }
+#endif
+
     const uint64 magnitude = binary64_magnitude_bits(x);
     *sign_gamma = 0;
     if (magnitude == 0)
@@ -505,7 +539,13 @@ consteval double tgamma_r(double x, int* sign_gamma) {
     const double result = 3.14159265358979323846 / (-x * sine * positive);
     return cevalm::scalbn(result, -adjustment);
 }
-consteval double tgamma(double x) {
+constexpr double tgamma(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::tgamma(x);
+    }
+#endif
+
     int sign_gamma = 0;
     const double result = tgamma_r(x, &sign_gamma);
     return sign_gamma < 0 ? -result : result;

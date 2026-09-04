@@ -8,6 +8,8 @@
  */
 #pragma once
 
+#include "cevalm_config.hpp"
+
 #ifndef __clang__
 #error "cevalm requires Clang"
 #endif
@@ -36,59 +38,65 @@ inline constexpr uint64 binary64_fraction_mask = 0x000fffffffffffffULL;
 inline constexpr uint64 binary64_quiet_nan_mask = 0x0008000000000000ULL;
 inline constexpr uint64 binary64_infinity_bits = 0x7ff0000000000000ULL;
 
-consteval uint64 binary64_bits(double value) {
+constexpr uint64 binary64_bits(double value) {
     return __builtin_bit_cast(uint64, value);
 }
 
-consteval double binary64_from_bits(uint64 bits) {
+constexpr double binary64_from_bits(uint64 bits) {
     return __builtin_bit_cast(double, bits);
 }
 
-consteval uint32 binary64_high_word(double value) {
+constexpr uint32 binary64_high_word(double value) {
     return static_cast<uint32>(binary64_bits(value) >> 32);
 }
 
-consteval uint32 binary64_low_word(double value) {
+constexpr uint32 binary64_low_word(double value) {
     return static_cast<uint32>(binary64_bits(value));
 }
 
-consteval double binary64_with_high_word(double value, uint32 high) {
+constexpr double binary64_with_high_word(double value, uint32 high) {
     return binary64_from_bits((static_cast<uint64>(high) << 32) | binary64_low_word(value));
 }
 
-consteval uint64 binary64_magnitude_bits(double value) {
+constexpr uint64 binary64_magnitude_bits(double value) {
     return binary64_bits(value) & ~binary64_sign_mask;
 }
 
-consteval bool binary64_is_nan_bits(uint64 bits) {
+constexpr bool binary64_is_nan_bits(uint64 bits) {
     return (bits & binary64_exponent_mask) == binary64_exponent_mask &&
            (bits & binary64_fraction_mask) != 0;
 }
 
-consteval bool binary64_is_infinite_bits(uint64 bits) {
+constexpr bool binary64_is_infinite_bits(uint64 bits) {
     return (bits & ~binary64_sign_mask) == binary64_infinity_bits;
 }
 
-consteval double binary64_quiet_nan(double value) {
+constexpr double binary64_quiet_nan(double value) {
     return binary64_from_bits(binary64_bits(value) | binary64_quiet_nan_mask);
 }
 
-consteval double binary64_propagate_nan(double first, double second) {
+constexpr double binary64_propagate_nan(double first, double second) {
     const uint64 first_bits = binary64_bits(first);
     return binary64_is_nan_bits(first_bits)
                ? binary64_from_bits(first_bits | binary64_quiet_nan_mask)
                : binary64_from_bits(binary64_bits(second) | binary64_quiet_nan_mask);
 }
 
-consteval double binary64_signed_zero(bool negative) {
+constexpr double binary64_signed_zero(bool negative) {
     return binary64_from_bits(negative ? binary64_sign_mask : 0);
 }
 
-consteval double binary64_infinity(bool negative) {
+constexpr double binary64_infinity(bool negative) {
     return binary64_from_bits(binary64_infinity_bits | (negative ? binary64_sign_mask : 0));
 }
 
-consteval double nan(const char* tag) {
+constexpr double nan(const char* tag) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::nan(tag);
+    }
+#endif
+
     if (tag == nullptr || *tag == '\0')
         return binary64_from_bits(0x7ff8000000000000ULL);
     unsigned base = 10;

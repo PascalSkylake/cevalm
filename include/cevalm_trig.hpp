@@ -8,6 +8,8 @@
  */
 #pragma once
 
+#include "cevalm_config.hpp"
+
 #include "cevalm_binary64.hpp"
 #include "cevalm_classify.hpp"
 #include "cevalm_exact.hpp"
@@ -15,7 +17,7 @@
 
 namespace cevalm {
 
-consteval double kernel_sin(double x, double y, int tail) {
+constexpr double kernel_sin(double x, double y, int tail) {
     constexpr double s1 = -1.66666666666666324348e-01;
     constexpr double s2 = 8.33333333332248946124e-03;
     constexpr double s3 = -1.98412698298579493134e-04;
@@ -30,7 +32,7 @@ consteval double kernel_sin(double x, double y, int tail) {
     return tail == 0 ? x + v * (s1 + z * r) : x - ((z * (0.5 * y - v * r) - y) - v * s1);
 }
 
-consteval double kernel_cos(double x, double y) {
+constexpr double kernel_cos(double x, double y) {
     constexpr double c1 = 4.16666666666666019037e-02;
     constexpr double c2 = -1.38888888888741095749e-03;
     constexpr double c3 = 2.48015872894767294178e-05;
@@ -51,7 +53,7 @@ consteval double kernel_cos(double x, double y) {
     return (1.0 - qx) - (hz - (z * r - x * y));
 }
 
-consteval double kernel_tan(double x, double y, int reciprocal) {
+constexpr double kernel_tan(double x, double y, int reciprocal) {
     constexpr double pio4 = 7.85398163397448278999e-01;
     constexpr double pio4_low = 3.06161699786838301793e-17;
     constexpr double coefficients[13] = {
@@ -114,11 +116,17 @@ consteval double kernel_tan(double x, double y, int reciprocal) {
     return high_inverse + inverse * (residual + high_inverse * correction);
 }
 
-consteval double trig_nan(double x) {
+constexpr double trig_nan(double x) {
     return isnan(x) ? binary64_quiet_nan(x) : binary64_from_bits(0xfff8000000000000ULL);
 }
 
-consteval double sin(double x) {
+constexpr double sin(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::sin(x);
+    }
+#endif
+
     const uint32 high = binary64_high_word(cevalm::fabs(x));
     if (high <= 0x3fe921fbU)
         return kernel_sin(x, 0.0, 0);
@@ -138,7 +146,13 @@ consteval double sin(double x) {
     }
 }
 
-consteval double cos(double x) {
+constexpr double cos(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::cos(x);
+    }
+#endif
+
     const uint32 high = binary64_high_word(cevalm::fabs(x));
     if (high <= 0x3fe921fbU)
         return kernel_cos(x, 0.0);
@@ -158,7 +172,13 @@ consteval double cos(double x) {
     }
 }
 
-consteval double tan(double x) {
+constexpr double tan(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::tan(x);
+    }
+#endif
+
     const uint32 high = binary64_high_word(cevalm::fabs(x));
     if (high <= 0x3fe921fbU)
         return kernel_tan(x, 0.0, 1);
@@ -169,7 +189,15 @@ consteval double tan(double x) {
     return kernel_tan(remainder[0], remainder[1], 1 - ((quadrant & 1) << 1));
 }
 
-consteval void sincos(double x, double* sine, double* cosine) {
+constexpr void sincos(double x, double* sine, double* cosine) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        *sine = std::sin(x);
+        *cosine = std::cos(x);
+        return;
+    }
+#endif
+
     *sine = cevalm::sin(x);
     *cosine = cevalm::cos(x);
 }

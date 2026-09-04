@@ -12,6 +12,8 @@
  */
 #pragma once
 
+#include "cevalm_config.hpp"
+
 #include "cevalm_binary64.hpp"
 #include "cevalm_classify.hpp"
 #include "cevalm_exact.hpp"
@@ -22,11 +24,17 @@
 
 namespace cevalm {
 
-consteval int32 power_floor_divide(int32 value, int32 divisor) {
+constexpr int32 power_floor_divide(int32 value, int32 divisor) {
     return value >= 0 ? value / divisor : -((-value + divisor - 1) / divisor);
 }
 
-consteval double exp2(double x) {
+constexpr double exp2(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::exp2(x);
+    }
+#endif
+
     if (isnan(x))
         return binary64_quiet_nan(x);
     if (x >= 1024.0)
@@ -64,7 +72,13 @@ consteval double exp2(double x) {
     return unsafe ? result * scale : result;
 }
 
-consteval double exp10(double x) {
+constexpr double exp10(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::pow(10.0, x);
+    }
+#endif
+
     if (isnan(x))
         return binary64_quiet_nan(x);
     if (isinf(x))
@@ -74,7 +88,13 @@ consteval double exp10(double x) {
     return cevalm::exp(2.30258509299404568402 * x);
 }
 
-consteval double cbrt(double x) {
+constexpr double cbrt(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::cbrt(x);
+    }
+#endif
+
     if (isnan(x))
         return binary64_quiet_nan(x);
     if (isinf(x) || binary64_magnitude_bits(x) == 0)
@@ -100,7 +120,13 @@ consteval double cbrt(double x) {
     return cevalm::ldexp(signbit(x) ? -refined : refined, exponent / 3);
 }
 
-consteval double hypot(double x, double y) {
+constexpr double hypot(double x, double y) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::hypot(x, y);
+    }
+#endif
+
     uint64 a_bits = binary64_magnitude_bits(x), b_bits = binary64_magnitude_bits(y);
     uint32 a_high = static_cast<uint32>(a_bits >> 32), b_high = static_cast<uint32>(b_bits >> 32);
     double a = cevalm::fabs(x), b = cevalm::fabs(y);
@@ -169,7 +195,7 @@ consteval double hypot(double x, double y) {
     return scale == 0 ? result : cevalm::scalbn(result, scale);
 }
 
-consteval int power_integer_kind(double value) {
+constexpr int power_integer_kind(double value) {
     const uint64 magnitude = binary64_magnitude_bits(value);
     const int exponent = static_cast<int>((magnitude >> 52) & 0x7ff) - 1023;
     if (exponent < 0)
@@ -183,7 +209,13 @@ consteval int power_integer_kind(double value) {
     return ((significand >> shift) & 1) != 0 ? 1 : 2;
 }
 
-consteval double powi(double x, int exponent) {
+constexpr double powi(double x, int exponent) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::pow(x, exponent);
+    }
+#endif
+
     const bool odd = (static_cast<unsigned>(exponent) & 1U) != 0;
     if (exponent == 0 || x == 1.0)
         return 1.0;
@@ -217,7 +249,13 @@ consteval double powi(double x, int exponent) {
     return odd && signbit(x) ? -result : result;
 }
 
-consteval double pow(double x, double y) {
+constexpr double pow(double x, double y) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::pow(x, y);
+    }
+#endif
+
     constexpr double bp[2] = {1.0, 1.5}, dp_high[2] = {0.0, 5.84962487220764160156e-01},
                      dp_low[2] = {0.0, 1.35003920212974897128e-08};
     constexpr double l1 = 5.99999999999994648725e-01, l2 = 4.28571428578550184252e-01,

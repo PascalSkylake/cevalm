@@ -1,6 +1,6 @@
 # cevalm
 
-`cevalm` is a freestanding, binary64-only, immediate-function mathematics
+`cevalm` is a binary64-only, constexpr mathematics
 library for Clang 22+ and the Zynq-7000 Cortex-A9 (`armv7a-none-eabi`).
 Its public functions use familiar `<cmath>` names under `namespace cevalm`:
 
@@ -10,10 +10,11 @@ Its public functions use familiar `<cmath>` names under `namespace cevalm`:
 constexpr double root_two = cevalm::sqrt(2.0);
 ```
 
-Every operation is `consteval`; runtime calls are intentionally rejected.
+At compile time, operations use the cevalm implementations. At runtime, the
+public functions dispatch to the corresponding `<cmath>` operation.
 Implementations derived from fdlibm preserve its binary64 arithmetic and
-returned bit patterns while omitting runtime floating-environment and errno
-behavior.
+returned bit patterns for constant evaluation; runtime behavior follows the
+standard library.
 
 ## Build the compile-time tests
 

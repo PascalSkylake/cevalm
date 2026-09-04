@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "cevalm_config.hpp"
+
 #include "cevalm_binary64.hpp"
 #include "cevalm_classify.hpp"
 #include "cevalm_exact.hpp"
@@ -92,11 +94,11 @@ inline constexpr double bessel_q1_s[4][6] = {
     {2.95333629060523854548e+01, 2.52981549982190529136e+02, 7.57502834868645436472e+02,
      7.39393205320467245656e+02, 1.55949003336666123687e+02, -4.95949898822628210127e+00}};
 
-consteval unsigned bessel_interval(uint32 high) {
+constexpr unsigned bessel_interval(uint32 high) {
     return high >= 0x40200000U ? 0U : (high >= 0x40122e8bU ? 1U : (high >= 0x4006db6dU ? 2U : 3U));
 }
 
-consteval double bessel_asymptotic_p(double x, const double (&rcoef)[4][6],
+constexpr double bessel_asymptotic_p(double x, const double (&rcoef)[4][6],
                                      const double (&scoef)[4][5]) {
     const uint32 high = binary64_high_word(x) & 0x7fffffffU;
     if (high >= 0x41b00000U)
@@ -110,7 +112,7 @@ consteval double bessel_asymptotic_p(double x, const double (&rcoef)[4][6],
     return 1.0 + r / s;
 }
 
-consteval double bessel_asymptotic_q(double x, const double (&rcoef)[4][6],
+constexpr double bessel_asymptotic_q(double x, const double (&rcoef)[4][6],
                                      const double (&scoef)[4][6], double leading) {
     const uint32 high = binary64_high_word(x) & 0x7fffffffU;
     if (high >= 0x41b00000U)
@@ -124,23 +126,29 @@ consteval double bessel_asymptotic_q(double x, const double (&rcoef)[4][6],
     return (leading + r / s) / x;
 }
 
-consteval double bessel_pzero(double x) {
+constexpr double bessel_pzero(double x) {
     return bessel_asymptotic_p(x, bessel_p0_r, bessel_p0_s);
 }
-consteval double bessel_qzero(double x) {
+constexpr double bessel_qzero(double x) {
     return bessel_asymptotic_q(x, bessel_q0_r, bessel_q0_s, -0.125);
 }
-consteval double bessel_pone(double x) {
+constexpr double bessel_pone(double x) {
     return bessel_asymptotic_p(x, bessel_p1_r, bessel_p1_s);
 }
-consteval double bessel_qone(double x) {
+constexpr double bessel_qone(double x) {
     return bessel_asymptotic_q(x, bessel_q1_r, bessel_q1_s, 0.375);
 }
 
-consteval double j0(double x);
-consteval double j1(double x);
+constexpr double j0(double x);
+constexpr double j1(double x);
 
-consteval double j0(double x) {
+constexpr double j0(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::cyl_bessel_j(0.0, x);
+    }
+#endif
+
     constexpr double invsqrtpi = 5.64189583547756279280e-01;
     const uint32 high = binary64_high_word(x) & 0x7fffffffU;
     if (high >= 0x7ff00000U)
@@ -176,7 +184,13 @@ consteval double j0(double x) {
     return (1.0 + u) * (1.0 - u) + z * (r / s);
 }
 
-consteval double j1(double x) {
+constexpr double j1(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::cyl_bessel_j(1.0, x);
+    }
+#endif
+
     constexpr double invsqrtpi = 5.64189583547756279280e-01;
     const uint32 high = binary64_high_word(x) & 0x7fffffffU;
     if (high >= 0x7ff00000U)
@@ -212,7 +226,13 @@ consteval double j1(double x) {
     return x * 0.5 + r / s;
 }
 
-consteval double y0(double x) {
+constexpr double y0(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::cyl_neumann(0.0, x);
+    }
+#endif
+
     constexpr double invsqrtpi = 5.64189583547756279280e-01, tpi = 6.36619772367581382433e-01;
     const uint64 magnitude = binary64_magnitude_bits(x);
     const uint32 high = binary64_high_word(x) & 0x7fffffffU;
@@ -253,7 +273,13 @@ consteval double y0(double x) {
     return u / v + tpi * (cevalm::j0(x) * cevalm::log(x));
 }
 
-consteval double y1(double x) {
+constexpr double y1(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::cyl_neumann(1.0, x);
+    }
+#endif
+
     constexpr double invsqrtpi = 5.64189583547756279280e-01, tpi = 6.36619772367581382433e-01;
     const uint64 magnitude = binary64_magnitude_bits(x);
     const uint32 high = binary64_high_word(x) & 0x7fffffffU;
@@ -294,7 +320,13 @@ consteval double y1(double x) {
     return x * (u / v) + tpi * (cevalm::j1(x) * cevalm::log(x) - 1.0 / x);
 }
 
-consteval double jn(int n, double x) {
+constexpr double jn(int n, double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::cyl_bessel_j(n, x);
+    }
+#endif
+
     const uint32 original_high = binary64_high_word(x);
     const uint32 high = original_high & 0x7fffffffU;
     if (isnan(x))
@@ -392,7 +424,13 @@ consteval double jn(int n, double x) {
     return negate ? -b : b;
 }
 
-consteval double yn(int n, double x) {
+constexpr double yn(int n, double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::cyl_neumann(n, x);
+    }
+#endif
+
     const uint32 high = binary64_high_word(x) & 0x7fffffffU;
     if (isnan(x))
         return binary64_quiet_nan(x);

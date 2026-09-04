@@ -8,13 +8,15 @@
  */
 #pragma once
 
+#include "cevalm_config.hpp"
+
 #include "cevalm_binary64.hpp"
 #include "cevalm_classify.hpp"
 #include "cevalm_round.hpp"
 
 namespace cevalm {
 
-consteval uint64 binary64_round_shift_right(uint64 value, int shift) {
+constexpr uint64 binary64_round_shift_right(uint64 value, int shift) {
     if (shift <= 0)
         return value;
     if (shift >= 54)
@@ -26,7 +28,7 @@ consteval uint64 binary64_round_shift_right(uint64 value, int shift) {
     return quotient + (remainder > halfway || (remainder == halfway && (quotient & 1)));
 }
 
-consteval double binary64_scale(double value, long long power) {
+constexpr double binary64_scale(double value, long long power) {
     const uint64 bits = binary64_bits(value);
     const uint64 sign = bits & binary64_sign_mask;
     uint64 exponent_field = (bits & binary64_exponent_mask) >> 52;
@@ -69,19 +71,43 @@ consteval double binary64_scale(double value, long long power) {
     return binary64_from_bits(sign | subnormal);
 }
 
-consteval double scalbn(double value, int power) {
+constexpr double scalbn(double value, int power) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::scalbn(value, power);
+    }
+#endif
+
     return binary64_scale(value, power);
 }
 
-consteval double scalbln(double value, long power) {
+constexpr double scalbln(double value, long power) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::scalbln(value, power);
+    }
+#endif
+
     return binary64_scale(value, static_cast<long long>(power));
 }
 
-consteval double ldexp(double value, int power) {
+constexpr double ldexp(double value, int power) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::ldexp(value, power);
+    }
+#endif
+
     return binary64_scale(value, power);
 }
 
-consteval double frexp(double value, int* exponent) {
+constexpr double frexp(double value, int* exponent) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::frexp(value, exponent);
+    }
+#endif
+
     const uint64 bits = binary64_bits(value);
     const uint64 magnitude = bits & ~binary64_sign_mask;
     uint64 exponent_field = (bits & binary64_exponent_mask) >> 52;
@@ -106,7 +132,13 @@ consteval double frexp(double value, int* exponent) {
                               (fraction & binary64_fraction_mask));
 }
 
-consteval double modf(double value, double* integral) {
+constexpr double modf(double value, double* integral) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::modf(value, integral);
+    }
+#endif
+
     if (isnan(value)) {
         const double quiet = binary64_quiet_nan(value);
         *integral = quiet;
@@ -122,7 +154,13 @@ consteval double modf(double value, double* integral) {
     return value - *integral;
 }
 
-consteval double nextafter(double from, double toward) {
+constexpr double nextafter(double from, double toward) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::nextafter(from, toward);
+    }
+#endif
+
     if (isnan(from) || isnan(toward))
         return binary64_propagate_nan(from, toward);
     if (from == toward)
@@ -139,7 +177,13 @@ consteval double nextafter(double from, double toward) {
     return binary64_from_bits(bits);
 }
 
-consteval double nexttoward(double from, double toward) {
+constexpr double nexttoward(double from, double toward) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::nexttoward(from, toward);
+    }
+#endif
+
     return nextafter(from, toward);
 }
 

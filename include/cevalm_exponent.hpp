@@ -8,6 +8,8 @@
  */
 #pragma once
 
+#include "cevalm_config.hpp"
+
 #include "cevalm_binary64.hpp"
 #include "cevalm_classify.hpp"
 #include "cevalm_round.hpp"
@@ -18,7 +20,13 @@ namespace cevalm {
 inline constexpr int fp_ilogb_zero = (-2147483647 - 1);
 inline constexpr int fp_ilogb_nan = 2147483647;
 
-consteval int ilogb(double value) {
+constexpr int ilogb(double value) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::ilogb(value);
+    }
+#endif
+
     const uint64 magnitude = binary64_magnitude_bits(value);
     const int encoded = static_cast<int>((magnitude >> 52) & 0x7ff);
     if (encoded != 0)
@@ -34,7 +42,13 @@ consteval int ilogb(double value) {
     return position - 1074;
 }
 
-consteval double logb(double value) {
+constexpr double logb(double value) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::logb(value);
+    }
+#endif
+
     if (isnan(value))
         return binary64_quiet_nan(value);
     if (isinf(value))
@@ -44,7 +58,13 @@ consteval double logb(double value) {
     return static_cast<double>(cevalm::ilogb(value));
 }
 
-consteval double significand(double value) {
+constexpr double significand(double value) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::scalbn(value, -std::ilogb(value));
+    }
+#endif
+
     const uint64 bits = binary64_bits(value);
     const uint64 exponent = bits & binary64_exponent_mask;
     if (exponent != 0 && exponent != binary64_exponent_mask)
@@ -53,7 +73,13 @@ consteval double significand(double value) {
     return value;
 }
 
-consteval double scalb(double value, double exponent) {
+constexpr double scalb(double value, double exponent) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::scalbn(value, static_cast<int>(exponent));
+    }
+#endif
+
     if (isnan(value) || isnan(exponent))
         return binary64_propagate_nan(value, exponent);
     if (isinf(exponent)) {

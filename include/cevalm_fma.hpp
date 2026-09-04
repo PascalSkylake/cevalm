@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "cevalm_config.hpp"
+
 #include "cevalm_binary64.hpp"
 #include "cevalm_classify.hpp"
 
@@ -11,12 +13,12 @@ struct fma_integer {
     uint64 limb[67];
 };
 
-consteval fma_integer fma_zero_integer() {
+constexpr fma_integer fma_zero_integer() {
     fma_integer result{};
     return result;
 }
 
-consteval void fma_add_word(fma_integer* value, unsigned index, uint64 word) {
+constexpr void fma_add_word(fma_integer* value, unsigned index, uint64 word) {
     while (word != 0 && index < 67) {
         const uint64 previous = value->limb[index];
         value->limb[index] += word;
@@ -25,7 +27,7 @@ consteval void fma_add_word(fma_integer* value, unsigned index, uint64 word) {
     }
 }
 
-consteval void fma_add_shifted(fma_integer* value, uint64 significand, unsigned shift) {
+constexpr void fma_add_shifted(fma_integer* value, uint64 significand, unsigned shift) {
     const unsigned index = shift >> 6;
     const unsigned offset = shift & 63U;
     if (offset == 0) {
@@ -36,7 +38,7 @@ consteval void fma_add_shifted(fma_integer* value, uint64 significand, unsigned 
     fma_add_word(value, index + 1, significand >> (64U - offset));
 }
 
-consteval int fma_compare(const fma_integer& first, const fma_integer& second) {
+constexpr int fma_compare(const fma_integer& first, const fma_integer& second) {
     for (int i = 66; i >= 0; --i) {
         if (first.limb[i] != second.limb[i])
             return first.limb[i] > second.limb[i] ? 1 : -1;
@@ -44,7 +46,7 @@ consteval int fma_compare(const fma_integer& first, const fma_integer& second) {
     return 0;
 }
 
-consteval fma_integer fma_subtract(const fma_integer& larger, const fma_integer& smaller) {
+constexpr fma_integer fma_subtract(const fma_integer& larger, const fma_integer& smaller) {
     fma_integer result{};
     uint64 borrow = 0;
     for (unsigned i = 0; i < 67; ++i) {
@@ -57,7 +59,7 @@ consteval fma_integer fma_subtract(const fma_integer& larger, const fma_integer&
     return result;
 }
 
-consteval int fma_high_bit(const fma_integer& value) {
+constexpr int fma_high_bit(const fma_integer& value) {
     for (int i = 66; i >= 0; --i) {
         if (value.limb[i] != 0) {
             uint64 word = value.limb[i];
@@ -70,11 +72,11 @@ consteval int fma_high_bit(const fma_integer& value) {
     return -1;
 }
 
-consteval bool fma_bit(const fma_integer& value, unsigned bit) {
+constexpr bool fma_bit(const fma_integer& value, unsigned bit) {
     return ((value.limb[bit >> 6] >> (bit & 63U)) & 1U) != 0;
 }
 
-consteval bool fma_any_below(const fma_integer& value, unsigned bit) {
+constexpr bool fma_any_below(const fma_integer& value, unsigned bit) {
     const unsigned index = bit >> 6;
     for (unsigned i = 0; i < index; ++i) {
         if (value.limb[i] != 0)
@@ -86,7 +88,7 @@ consteval bool fma_any_below(const fma_integer& value, unsigned bit) {
     return (value.limb[index] & ((uint64{1} << offset) - 1U)) != 0;
 }
 
-consteval uint64 fma_shift_to_word(const fma_integer& value, unsigned shift) {
+constexpr uint64 fma_shift_to_word(const fma_integer& value, unsigned shift) {
     const unsigned index = shift >> 6;
     const unsigned offset = shift & 63U;
     uint64 result = value.limb[index] >> offset;
@@ -95,7 +97,7 @@ consteval uint64 fma_shift_to_word(const fma_integer& value, unsigned shift) {
     return result;
 }
 
-consteval double fma_round(const fma_integer& magnitude, bool negative) {
+constexpr double fma_round(const fma_integer& magnitude, bool negative) {
     constexpr int storage_exponent = -2148;
     int high = fma_high_bit(magnitude);
     if (high < 0)
@@ -123,17 +125,23 @@ consteval double fma_round(const fma_integer& magnitude, bool negative) {
                               (rounded & binary64_fraction_mask));
 }
 
-consteval uint64 fma_significand(uint64 bits) {
+constexpr uint64 fma_significand(uint64 bits) {
     const uint64 fraction = bits & binary64_fraction_mask;
     return (bits & binary64_exponent_mask) == 0 ? fraction : fraction | (uint64{1} << 52);
 }
 
-consteval int fma_exponent(uint64 bits) {
+constexpr int fma_exponent(uint64 bits) {
     const int encoded = static_cast<int>((bits & binary64_exponent_mask) >> 52);
     return encoded == 0 ? -1074 : encoded - 1023 - 52;
 }
 
-consteval double fma(double x, double y, double z) {
+constexpr double fma(double x, double y, double z) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::fma(x, y, z);
+    }
+#endif
+
     const uint64 x_bits = binary64_bits(x);
     const uint64 y_bits = binary64_bits(y);
     const uint64 z_bits = binary64_bits(z);

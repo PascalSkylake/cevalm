@@ -10,16 +10,24 @@
  */
 #pragma once
 
+#include "cevalm_config.hpp"
+
 #include "cevalm_binary64.hpp"
 #include "cevalm_classify.hpp"
 
 namespace cevalm {
 
-consteval int binary64_unbiased_exponent(uint64 bits) {
+constexpr int binary64_unbiased_exponent(uint64 bits) {
     return static_cast<int>((bits & binary64_exponent_mask) >> 52) - 1023;
 }
 
-consteval double trunc(double value) {
+constexpr double trunc(double value) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::trunc(value);
+    }
+#endif
+
     const uint64 bits = binary64_bits(value);
     const uint64 magnitude = bits & ~binary64_sign_mask;
     const uint64 exponent_field = (bits & binary64_exponent_mask) >> 52;
@@ -38,7 +46,13 @@ consteval double trunc(double value) {
     return binary64_from_bits(bits & ~fractional_mask);
 }
 
-consteval double floor(double value) {
+constexpr double floor(double value) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::floor(value);
+    }
+#endif
+
     const uint64 bits = binary64_bits(value);
     const uint64 magnitude = bits & ~binary64_sign_mask;
     const bool negative = (bits & binary64_sign_mask) != 0;
@@ -65,7 +79,13 @@ consteval double floor(double value) {
     return binary64_from_bits(result);
 }
 
-consteval double ceil(double value) {
+constexpr double ceil(double value) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::ceil(value);
+    }
+#endif
+
     const uint64 bits = binary64_bits(value);
     const uint64 magnitude = bits & ~binary64_sign_mask;
     const bool negative = (bits & binary64_sign_mask) != 0;
@@ -92,7 +112,13 @@ consteval double ceil(double value) {
     return binary64_from_bits(result);
 }
 
-consteval double round(double value) {
+constexpr double round(double value) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::round(value);
+    }
+#endif
+
     const uint64 bits = binary64_bits(value);
     const uint64 magnitude = bits & ~binary64_sign_mask;
     const uint64 exponent_field = (bits & binary64_exponent_mask) >> 52;
@@ -118,7 +144,13 @@ consteval double round(double value) {
     return binary64_from_bits(result);
 }
 
-consteval double rint(double value) {
+constexpr double rint(double value) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::rint(value);
+    }
+#endif
+
     const uint64 bits = binary64_bits(value);
     const uint64 magnitude = bits & ~binary64_sign_mask;
     const uint64 exponent_field = (magnitude & binary64_exponent_mask) >> 52;
@@ -146,32 +178,62 @@ consteval double rint(double value) {
     return binary64_from_bits(result);
 }
 
-consteval double nearbyint(double value) {
+constexpr double nearbyint(double value) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::nearbyint(value);
+    }
+#endif
+
     return cevalm::rint(value);
 }
 
-consteval long lrint(double value) {
+constexpr long lrint(double value) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::lrint(value);
+    }
+#endif
+
     const double rounded = cevalm::rint(value);
     if (!isfinite(rounded) || rounded >= 0x1p31 || rounded < -0x1p31)
         return (-2147483647L - 1L);
     return static_cast<long>(rounded);
 }
 
-consteval long long llrint(double value) {
+constexpr long long llrint(double value) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::llrint(value);
+    }
+#endif
+
     const double rounded = cevalm::rint(value);
     if (!isfinite(rounded) || rounded >= 0x1p63 || rounded < -0x1p63)
         return (-9223372036854775807LL - 1LL);
     return static_cast<long long>(rounded);
 }
 
-consteval long lround(double value) {
+constexpr long lround(double value) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::lround(value);
+    }
+#endif
+
     const double rounded = cevalm::round(value);
     if (!isfinite(rounded) || rounded >= 0x1p31 || rounded < -0x1p31)
         return (-2147483647L - 1L);
     return static_cast<long>(rounded);
 }
 
-consteval long long llround(double value) {
+constexpr long long llround(double value) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::llround(value);
+    }
+#endif
+
     const double rounded = cevalm::round(value);
     if (!isfinite(rounded) || rounded >= 0x1p63 || rounded < -0x1p63)
         return (-9223372036854775807LL - 1LL);

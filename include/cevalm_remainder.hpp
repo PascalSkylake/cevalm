@@ -11,6 +11,8 @@
  */
 #pragma once
 
+#include "cevalm_config.hpp"
+
 #include "cevalm_binary64.hpp"
 #include "cevalm_classify.hpp"
 #include "cevalm_exact.hpp"
@@ -18,7 +20,7 @@
 
 namespace cevalm {
 
-consteval int remainder_ilogb(uint64 magnitude) {
+constexpr int remainder_ilogb(uint64 magnitude) {
     const int encoded = static_cast<int>((magnitude >> 52) & 0x7ff);
     if (encoded != 0)
         return encoded - 1023;
@@ -31,13 +33,19 @@ consteval int remainder_ilogb(uint64 magnitude) {
     return position - 1074;
 }
 
-consteval uint64 remainder_significand(uint64 magnitude, int exponent) {
+constexpr uint64 remainder_significand(uint64 magnitude, int exponent) {
     if ((magnitude & binary64_exponent_mask) != 0)
         return (magnitude & binary64_fraction_mask) | 0x0010000000000000ULL;
     return magnitude << static_cast<unsigned>(-1022 - exponent);
 }
 
-consteval double fmod(double x, double y) {
+constexpr double fmod(double x, double y) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::fmod(x, y);
+    }
+#endif
+
     const uint64 x_bits = binary64_bits(x), y_bits = binary64_bits(y),
                  x_magnitude = x_bits & ~binary64_sign_mask,
                  y_magnitude = y_bits & ~binary64_sign_mask;
@@ -78,7 +86,13 @@ consteval double fmod(double x, double y) {
     return binary64_from_bits(result | (negative ? binary64_sign_mask : 0));
 }
 
-consteval double remainder(double x, double divisor) {
+constexpr double remainder(double x, double divisor) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::remainder(x, divisor);
+    }
+#endif
+
     const uint64 x_bits = binary64_bits(x), divisor_bits = binary64_bits(divisor),
                  x_magnitude = x_bits & ~binary64_sign_mask,
                  divisor_magnitude = divisor_bits & ~binary64_sign_mask;
@@ -108,7 +122,13 @@ consteval double remainder(double x, double divisor) {
     return negative ? -x : x;
 }
 
-consteval double remquo(double x, double divisor, int* quotient) {
+constexpr double remquo(double x, double divisor, int* quotient) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::remquo(x, divisor, quotient);
+    }
+#endif
+
     const uint64 x_bits = binary64_bits(x), divisor_bits = binary64_bits(divisor),
                  x_magnitude = x_bits & ~binary64_sign_mask,
                  divisor_magnitude = divisor_bits & ~binary64_sign_mask;

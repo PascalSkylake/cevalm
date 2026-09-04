@@ -8,6 +8,8 @@
  */
 #pragma once
 
+#include "cevalm_config.hpp"
+
 #include "cevalm_binary64.hpp"
 #include "cevalm_classify.hpp"
 #include "cevalm_exact.hpp"
@@ -16,7 +18,7 @@
 
 namespace cevalm {
 
-consteval int kernel_rem_pio2(double* x, double* y, int e0, int nx) {
+constexpr int kernel_rem_pio2(double* x, double* y, int e0, int nx) {
     constexpr int32 two_over_pi[] = {
         0xa2f983, 0x6e4e44, 0x1529fc, 0x2757d1, 0xf534dd, 0xc0db62, 0x95993c, 0x439041, 0xfe5163,
         0xabdebb, 0xc561b7, 0x246e3a, 0x424dd2, 0xe00649, 0x2eea09, 0xd1921c, 0xfe1deb, 0x1cb129,
@@ -168,7 +170,7 @@ consteval int kernel_rem_pio2(double* x, double* y, int e0, int nx) {
     return n & 7;
 }
 
-consteval int rem_pio2(double x, double* y) {
+constexpr int rem_pio2(double x, double* y) {
     constexpr uint32 multiples[] = {
         0x3ff921fb, 0x400921fb, 0x4012d97c, 0x401921fb, 0x401f6a7a, 0x4022d97c, 0x4025fdbb,
         0x402921fb, 0x402c463a, 0x402f6a7a, 0x4031475c, 0x4032d97c, 0x40346b9c, 0x4035fdbb,

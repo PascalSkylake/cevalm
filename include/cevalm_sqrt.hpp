@@ -8,11 +8,19 @@
  */
 #pragma once
 
+#include "cevalm_config.hpp"
+
 #include "cevalm_binary64.hpp"
 
 namespace cevalm {
 
-consteval double sqrt(double value) {
+constexpr double sqrt(double value) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::sqrt(value);
+    }
+#endif
+
     const uint64 bits = binary64_bits(value);
     const uint64 magnitude = bits & ~binary64_sign_mask;
     if (binary64_is_nan_bits(bits))

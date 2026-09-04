@@ -8,6 +8,8 @@
  */
 #pragma once
 
+#include "cevalm_config.hpp"
+
 #include "cevalm_binary64.hpp"
 #include "cevalm_classify.hpp"
 #include "cevalm_exact.hpp"
@@ -17,7 +19,13 @@
 
 namespace cevalm {
 
-consteval double sinh(double x) {
+constexpr double sinh(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::sinh(x);
+    }
+#endif
+
     const uint64 magnitude = binary64_magnitude_bits(x);
     const uint32 high = static_cast<uint32>(magnitude >> 32);
     const bool negative = signbit(x);
@@ -46,7 +54,13 @@ consteval double sinh(double x) {
     return binary64_infinity(negative);
 }
 
-consteval double cosh(double x) {
+constexpr double cosh(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::cosh(x);
+    }
+#endif
+
     const uint64 magnitude = binary64_magnitude_bits(x);
     const uint32 high = static_cast<uint32>(magnitude >> 32);
     const double absolute = cevalm::fabs(x);
@@ -76,7 +90,13 @@ consteval double cosh(double x) {
     return binary64_infinity(false);
 }
 
-consteval double tanh(double x) {
+constexpr double tanh(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::tanh(x);
+    }
+#endif
+
     const uint64 magnitude = binary64_magnitude_bits(x);
     const uint32 high = static_cast<uint32>(magnitude >> 32);
     const bool negative = signbit(x);
@@ -102,7 +122,13 @@ consteval double tanh(double x) {
     return negative ? -result : result;
 }
 
-consteval double asinh(double x) {
+constexpr double asinh(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::asinh(x);
+    }
+#endif
+
     const uint32 high = binary64_high_word(cevalm::fabs(x));
     const bool negative = signbit(x);
     const double absolute = cevalm::fabs(x);
@@ -125,7 +151,13 @@ consteval double asinh(double x) {
     return negative ? -result : result;
 }
 
-consteval double acosh(double x) {
+constexpr double acosh(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::acosh(x);
+    }
+#endif
+
     const uint64 bits = binary64_bits(x);
     const uint32 high = binary64_high_word(x);
     if (isnan(x))
@@ -147,7 +179,13 @@ consteval double acosh(double x) {
     return cevalm::log1p(difference + cevalm::sqrt(2.0 * difference + difference * difference));
 }
 
-consteval double atanh(double x) {
+constexpr double atanh(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::atanh(x);
+    }
+#endif
+
     const uint64 magnitude = binary64_magnitude_bits(x);
     const uint32 high = static_cast<uint32>(magnitude >> 32);
     const bool negative = signbit(x);

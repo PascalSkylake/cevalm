@@ -17,6 +17,7 @@ set(CEVALM_FORMAT_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/include/cevalm_bessel.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/include/cevalm_binary64.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/include/cevalm_classify.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/cevalm_config.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/include/cevalm_exact.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/include/cevalm_exp.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/include/cevalm_exp2_table.hpp
@@ -65,18 +66,12 @@ if(CEVALM_BUILD_TESTS)
     add_library(cevalm_static_asserts OBJECT tests/static_asserts.cpp)
     target_link_libraries(cevalm_static_asserts PRIVATE cevalm)
     target_compile_options(cevalm_static_asserts PRIVATE
-        -nostdinc++
         -Wall
         -Wextra
         -Wconversion
         -Wsign-conversion
         -Werror)
 
-    add_custom_target(cevalm_consteval_only ALL
-        COMMAND ${CMAKE_COMMAND}
-            -DCEVALM_COMPILER=${CMAKE_CXX_COMPILER}
-            -DCEVALM_INCLUDE=${CMAKE_CURRENT_SOURCE_DIR}/include
-            -DCEVALM_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/tests/runtime_call_must_fail.cpp
-            -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/expect_compile_failure.cmake
-        VERBATIM)
+    add_library(cevalm_runtime_calls OBJECT tests/runtime_call_must_fail.cpp)
+    target_link_libraries(cevalm_runtime_calls PRIVATE cevalm)
 endif()

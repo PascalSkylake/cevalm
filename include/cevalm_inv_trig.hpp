@@ -8,6 +8,8 @@
  */
 #pragma once
 
+#include "cevalm_config.hpp"
+
 #include "cevalm_binary64.hpp"
 #include "cevalm_classify.hpp"
 #include "cevalm_exact.hpp"
@@ -15,7 +17,13 @@
 
 namespace cevalm {
 
-consteval double atan(double x) {
+constexpr double atan(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::atan(x);
+    }
+#endif
+
     constexpr double high_parts[4] = {4.63647609000806093515e-01, 7.85398163397448278999e-01,
                                       9.82793723247329054082e-01, 1.57079632679489655800e+00};
     constexpr double low_parts[4] = {2.26987774529616870924e-17, 3.06161699786838301793e-17,
@@ -75,7 +83,13 @@ consteval double atan(double x) {
     return negative ? -result : result;
 }
 
-consteval double atan2(double y, double x) {
+constexpr double atan2(double y, double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::atan2(y, x);
+    }
+#endif
+
     constexpr double tiny = 1.0e-300, quarter_pi = 7.8539816339744827900e-01,
                      half_pi = 1.5707963267948965580, pi = 3.1415926535897931160,
                      pi_low = 1.2246467991473531772e-16;
@@ -142,7 +156,13 @@ consteval double atan2(double y, double x) {
     }
 }
 
-consteval double asin(double x) {
+constexpr double asin(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::asin(x);
+    }
+#endif
+
     constexpr double pio2_high = 1.57079632679489655800, pio2_low = 6.12323399573676603587e-17,
                      pio4_high = 7.85398163397448278999e-01;
     constexpr double p0 = 1.66666666666666657415e-01, p1 = -3.25565818622400915405e-01,
@@ -187,7 +207,13 @@ consteval double asin(double x) {
     return signbit(x) ? -t : t;
 }
 
-consteval double acos(double x) {
+constexpr double acos(double x) {
+#if CEVALM_HAS_STD_RUNTIME
+    if !consteval {
+        return std::acos(x);
+    }
+#endif
+
     constexpr double pi = 3.14159265358979311600, pio2_high = 1.57079632679489655800,
                      pio2_low = 6.12323399573676603587e-17;
     constexpr double p0 = 1.66666666666666657415e-01, p1 = -3.25565818622400915405e-01,
